@@ -1,0 +1,62 @@
+name: BOSS Test Suite
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pytest jsonschema
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short --junitxml=.boss/test-results/junit.xml
+
+      - name: Verify shell script syntax
+        run: |
+          bash -n hooks/stop-gate.sh
+          bash -n hooks/commit-msg.sh
+          bash -n hooks/pre-push.sh
+          bash -n install.sh
+          echo "All shell scripts syntax OK"
+
+      - name: Verify hook executable bits
+        run: |
+          mode=$(git ls-files --stage hooks/stop-gate.sh | awk '{print $1}')
+          [ "$mode" = "100755" ] || (echo "FAIL: stop-gate.sh not executable ($mode)" && exit 1)
+          echo "PASS: stop-gate.sh is 100755"
+
+      - name: Validate JSON files
+        run: |
+          python -c "import json; json.load(open('package.json'))"
+          python -c "import json; json.load(open('.boss/schemas/certification.schema.json'))"
+          echo "All JSON files valid"
+
+      - name: Verify certification exists and is certified
+        run: |
+          python -c "
+          import json, sys
+          cert = json.load(open('.boss/certification.json'))
+          if not cert.get('certified'):
+              print('FAIL: certification.json certified=false or missing')
+              print('Gaps:', cert.get('gaps'))
+              sys.exit(1)
+          print(f'PASS: certified=true ({cert[\"requirements_passed\"]}/{cert[\"requirements_total\"]} requirements)')
+          "
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.sha }}
+          path: .boss/test-results/
