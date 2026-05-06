@@ -116,6 +116,39 @@ _Source: BOSS.md + user requirements + live research_
 | REQ-061 | commit-msg hook enforces conventional commits format | Yes — bad commit rejected |
 | REQ-062 | pre-push hook runs test suite before every push | Yes — break test, push blocked |
 
+### Layer 8: CI-First Bootstrap
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-063 | /build skill creates GitHub repo + pushes CI workflow BEFORE any code committed | Yes — git log shows CI commit first |
+| REQ-064 | CI must pass on bootstrap commit before code phase begins | Yes — gh run list shows green |
+| REQ-065 | Bootstrap commit contains only .github/workflows/test.yml + .boss/spec.md + .boss/testplan.md | Yes — git show first commit |
+
+### Layer 9: Smart Delta
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-066 | scripts/boss-delta.py diffs .boss/requirements.md against git HEAD version | Yes — modify req, run script |
+| REQ-067 | boss-delta.py outputs .boss/run-plan.md listing changed REQ IDs and affected phases | Yes — read output file |
+| REQ-068 | /build skill runs boss-delta.py when requirements.md is git-tracked; skips unchanged phases | Yes — no-change run skips phases |
+
+### Layer 10: CI Matrix
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-069 | BOSS own CI and all 5 CI templates run on matrix: ubuntu-latest + macos-latest | Yes — workflow matrix key present |
+
+### Layer 11: Demo/Signoff Gate
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-070 | Agent 1 generates .boss/demo-artifacts/ BEFORE writing any source code | Yes — dir exists before first src commit |
+| REQ-071 | Demo artifacts: UI→wireframe.md, API→contract.md, service→sequence.md (project-type based) | Yes — file exists, has content |
+| REQ-072 | PreToolUse hook blocks Write/Edit on non-.boss/ files until .boss/demo-signoff.md exists | Yes — attempt write, observe block |
+| REQ-073 | /demo skill generates demo artifacts from .boss/spec.md | Yes — invoke /demo, check .boss/demo-artifacts/ |
+| REQ-074 | /signoff skill records CEO approval to .boss/demo-signoff.md with timestamp | Yes — invoke /signoff, read file |
+| REQ-075 | pre-build-gate hook registered as PreToolUse event in settings.json | Yes — grep settings.json |
+
 ---
 
 ## Non-Functional Requirements

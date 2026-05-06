@@ -8,7 +8,10 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -17,7 +20,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pytest jsonschema
+        run: pip install pytest jsonschema pyyaml
 
       - name: Run tests
         run: pytest tests/ -v --tb=short --junitxml=.boss/test-results/junit.xml
@@ -25,6 +28,7 @@ jobs:
       - name: Verify shell script syntax
         run: |
           bash -n hooks/stop-gate.sh
+          bash -n hooks/pre-build-gate.sh
           bash -n hooks/commit-msg.sh
           bash -n hooks/pre-push.sh
           bash -n install.sh
@@ -35,6 +39,9 @@ jobs:
           mode=$(git ls-files --stage hooks/stop-gate.sh | awk '{print $1}')
           [ "$mode" = "100755" ] || (echo "FAIL: stop-gate.sh not executable ($mode)" && exit 1)
           echo "PASS: stop-gate.sh is 100755"
+          mode2=$(git ls-files --stage hooks/pre-build-gate.sh | awk '{print $1}')
+          [ "$mode2" = "100755" ] || (echo "FAIL: pre-build-gate.sh not executable ($mode2)" && exit 1)
+          echo "PASS: pre-build-gate.sh is 100755"
 
       - name: Validate JSON files
         run: |

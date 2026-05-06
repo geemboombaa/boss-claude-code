@@ -121,6 +121,10 @@ copy_or_download "hooks/stop-gate.sh" "$BOSS_DIR/hooks/stop-gate.sh"
 chmod +x "$BOSS_DIR/hooks/stop-gate.sh"
 log "  Copied stop-gate.sh to $BOSS_DIR/hooks/"
 
+copy_or_download "hooks/pre-build-gate.sh" "$BOSS_DIR/hooks/pre-build-gate.sh"
+chmod +x "$BOSS_DIR/hooks/pre-build-gate.sh"
+log "  Copied pre-build-gate.sh to $BOSS_DIR/hooks/"
+
 copy_or_download "scripts/patch-settings.py" "$BOSS_DIR/scripts/patch-settings.py"
 
 log ""
@@ -197,10 +201,15 @@ if [ "$SKIP_CI" = false ]; then
 fi
 
 # Copy BOSS verification skills
-mkdir -p "$BOSS_DIR/skills/verify" "$BOSS_DIR/skills/certify"
-copy_or_download "skills/verify/SKILL.md" "$BOSS_DIR/skills/verify/SKILL.md"
+mkdir -p "$BOSS_DIR/skills/verify" "$BOSS_DIR/skills/certify" "$BOSS_DIR/skills/build" "$BOSS_DIR/skills/demo" "$BOSS_DIR/skills/signoff"
+copy_or_download "skills/build/SKILL.md"   "$BOSS_DIR/skills/build/SKILL.md"
+copy_or_download "skills/verify/SKILL.md"  "$BOSS_DIR/skills/verify/SKILL.md"
 copy_or_download "skills/certify/SKILL.md" "$BOSS_DIR/skills/certify/SKILL.md"
-log "  Installed /verify and /certify skills"
+copy_or_download "skills/demo/SKILL.md"    "$BOSS_DIR/skills/demo/SKILL.md"
+copy_or_download "skills/signoff/SKILL.md" "$BOSS_DIR/skills/signoff/SKILL.md"
+copy_or_download "scripts/boss-delta.py"   "$BOSS_DIR/scripts/boss-delta.py"
+log "  Installed /build, /verify, /certify, /demo, /signoff skills"
+log "  Installed boss-delta.py (smart delta)"
 
 log ""
 log "============================================="

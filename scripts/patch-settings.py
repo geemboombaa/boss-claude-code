@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BOSS settings patcher -- merges Stop/SubagentStop hooks into ~/.claude/settings.json
+BOSS settings patcher -- merges Stop/SubagentStop/PreToolUse hooks into ~/.claude/settings.json
 Safe: idempotent, non-destructive, atomic write, timestamped backup
 """
 import json
@@ -44,12 +44,15 @@ def main():
     parser.add_argument("--settings", default=None)
     parser.add_argument("--hook-command-sh",  default="bash ~/.claude/boss/hooks/stop-gate.sh")
     parser.add_argument("--hook-command-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/stop-gate.ps1"')
+    parser.add_argument("--pre-build-gate-sh",  default="bash ~/.claude/boss/hooks/pre-build-gate.sh")
+    parser.add_argument("--pre-build-gate-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/pre-build-gate.ps1"')
     parser.add_argument("--platform", default=None, choices=["win", "unix"])
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     is_windows = (args.platform == "win") or (args.platform is None and platform.system() == "Windows")
     hook_command = args.hook_command_ps1 if is_windows else args.hook_command_sh
+    pre_build_gate_command = args.pre_build_gate_ps1 if is_windows else args.pre_build_gate_sh
 
     settings_path = (
         pathlib.Path(args.settings) if args.settings
@@ -67,9 +70,13 @@ def main():
     else:
         settings = {}
 
-    boss_hook_entry = {
+    stop_hook_entry = {
         "matcher": "",
         "hooks": [{"type": "command", "command": hook_command}]
+    }
+    pre_build_gate_entry = {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [{"type": "command", "command": pre_build_gate_command}]
     }
 
     existing_hooks = settings.get("hooks", {})
@@ -77,7 +84,6 @@ def main():
 
     for event in ("Stop", "SubagentStop"):
         existing_list = existing_hooks.get(event, [])
-        # FIX: check command field only — avoids false match on paths like /home/bossanova/
         already_registered = any(
             "stop-gate" in h.get("command", "").lower()
             for entry in existing_list
@@ -85,15 +91,31 @@ def main():
             if isinstance(h, dict)
         )
         if not already_registered:
-            existing_list.append(boss_hook_entry)
+            existing_list.append(stop_hook_entry)
             existing_hooks[event] = existing_list
             changed = True
-            print(f"  + Adding BOSS hook to {event}")
+            print(f"  + Adding BOSS stop-gate hook to {event}")
         else:
-            print(f"  = BOSS hook already registered for {event}, skipping")
+            print(f"  = BOSS stop-gate hook already registered for {event}, skipping")
+
+    # Register PreToolUse demo/signoff gate
+    pre_tool_list = existing_hooks.get("PreToolUse", [])
+    gate_registered = any(
+        "pre-build-gate" in h.get("command", "").lower()
+        for entry in pre_tool_list
+        for h in entry.get("hooks", [])
+        if isinstance(h, dict)
+    )
+    if not gate_registered:
+        pre_tool_list.append(pre_build_gate_entry)
+        existing_hooks["PreToolUse"] = pre_tool_list
+        changed = True
+        print("  + Adding BOSS pre-build-gate hook to PreToolUse")
+    else:
+        print("  = BOSS pre-build-gate hook already registered for PreToolUse, skipping")
 
     if not changed:
-        print("No changes needed -- BOSS hooks already registered.")
+        print("No changes needed -- all BOSS hooks already registered.")
         return
 
     settings["hooks"] = existing_hooks

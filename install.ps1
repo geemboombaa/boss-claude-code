@@ -89,6 +89,9 @@ New-Item -ItemType Directory -Path (Join-Path $BossDir "scripts") -Force | Out-N
 Copy-OrDownload "hooks/stop-gate.ps1" (Join-Path $BossDir "hooks\stop-gate.ps1")
 Write-Log "  Copied stop-gate.ps1 to $BossDir\hooks\"
 
+Copy-OrDownload "hooks/pre-build-gate.ps1" (Join-Path $BossDir "hooks\pre-build-gate.ps1")
+Write-Log "  Copied pre-build-gate.ps1 to $BossDir\hooks\"
+
 Copy-OrDownload "scripts/patch-settings.py" (Join-Path $BossDir "scripts\patch-settings.py")
 
 Write-Log ""
@@ -161,12 +164,18 @@ if (-not $SkipCI) {
     }
 }
 
-# Install skills
-New-Item -ItemType Directory -Path (Join-Path $BossDir "skills\verify") -Force | Out-Null
-New-Item -ItemType Directory -Path (Join-Path $BossDir "skills\certify") -Force | Out-Null
-Copy-OrDownload "skills/verify/SKILL.md" (Join-Path $BossDir "skills\verify\SKILL.md")
+# Install skills and scripts
+foreach ($d in @("skills\build", "skills\verify", "skills\certify", "skills\demo", "skills\signoff", "scripts")) {
+    New-Item -ItemType Directory -Path (Join-Path $BossDir $d) -Force | Out-Null
+}
+Copy-OrDownload "skills/build/SKILL.md"   (Join-Path $BossDir "skills\build\SKILL.md")
+Copy-OrDownload "skills/verify/SKILL.md"  (Join-Path $BossDir "skills\verify\SKILL.md")
 Copy-OrDownload "skills/certify/SKILL.md" (Join-Path $BossDir "skills\certify\SKILL.md")
-Write-Log "  Installed /verify and /certify skills"
+Copy-OrDownload "skills/demo/SKILL.md"    (Join-Path $BossDir "skills\demo\SKILL.md")
+Copy-OrDownload "skills/signoff/SKILL.md" (Join-Path $BossDir "skills\signoff\SKILL.md")
+Copy-OrDownload "scripts/boss-delta.py"   (Join-Path $BossDir "scripts\boss-delta.py")
+Write-Log "  Installed /build, /verify, /certify, /demo, /signoff skills"
+Write-Log "  Installed boss-delta.py (smart delta)"
 
 Write-Log ""
 Write-Log "============================================="

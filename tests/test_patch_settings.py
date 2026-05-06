@@ -124,3 +124,32 @@ class TestPatchSettings:
         result = run_patcher(settings)
         assert result.returncode == 0
         assert settings.exists()
+
+    def test_registers_pretooluse_hook(self, tmp_path):
+        """REQ-075: pre-build-gate registered as PreToolUse hook."""
+        settings = tmp_path / "settings.json"
+        run_patcher(settings)
+        data = json.loads(settings.read_text())
+        assert "PreToolUse" in data["hooks"], "PreToolUse key missing from hooks"
+        pre_tool = data["hooks"]["PreToolUse"]
+        all_commands = [h["command"] for entry in pre_tool for h in entry.get("hooks", [])]
+        assert any("pre-build-gate" in c.lower() for c in all_commands), "pre-build-gate not registered"
+
+    def test_pretooluse_hook_idempotent(self, tmp_path):
+        """REQ-075: running patcher twice does not duplicate PreToolUse entry."""
+        settings = tmp_path / "settings.json"
+        run_patcher(settings)
+        run_patcher(settings)
+        data = json.loads(settings.read_text())
+        pre_tool = data["hooks"]["PreToolUse"]
+        boss_entries = [h for e in pre_tool for h in e.get("hooks", []) if "pre-build-gate" in h.get("command", "")]
+        assert len(boss_entries) == 1, f"Expected 1 pre-build-gate entry, got {len(boss_entries)}"
+
+    def test_pretooluse_matcher_set(self, tmp_path):
+        """PreToolUse entry has matcher covering Write/Edit/MultiEdit/NotebookEdit."""
+        settings = tmp_path / "settings.json"
+        run_patcher(settings)
+        data = json.loads(settings.read_text())
+        pre_tool = data["hooks"]["PreToolUse"]
+        matchers = [e.get("matcher", "") for e in pre_tool]
+        assert any("Write" in m and "Edit" in m for m in matchers), "matcher should cover Write and Edit"
