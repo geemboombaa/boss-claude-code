@@ -1,0 +1,13 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\Users\v_per\Claude\Projects\SDLC\boss
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collected 31 items
+
+tests\test_certification_schema.py ......                                [ 19%]
+tests\test_patch_settings.py ..........                                  [ 51%]
+tests\test_stop_gate_logic.py ssssssssss.....                            [100%]
+
+- generated xml file: C:\Users\v_per\Claude\Projects\SDLC\boss\.boss\test-results\junit.xml -
+======================= 21 passed, 10 skipped in 1.49s ========================
