@@ -87,3 +87,38 @@ package.json parses as valid JSON with name, version, bin fields present.
 
 ### SPEC-020: MIT LICENSE file exists
 LICENSE file exists and contains "MIT License".
+
+### SPEC-021: pre-build-gate.sh exists and is executable (100755)
+File at hooks/pre-build-gate.sh with mode 100755 in git index.
+
+### SPEC-022: pre-build-gate.ps1 exists with valid PowerShell-compatible structure
+File at hooks/pre-build-gate.ps1. Contains decision/block JSON output logic.
+
+### SPEC-023: pre-build-gate checks spec.md and demo-signoff.md
+Both hooks gate on .boss/spec.md existence and .boss/demo-signoff.md absence.
+
+### SPEC-024: pre-build-gate allows writes inside .boss/
+Writes to .boss/ directory bypass the gate even when active.
+
+### SPEC-025: pre-build-gate.sh blocks source writes, allows after signoff
+When spec.md present + no signoff.md → block. When signoff.md present → allow.
+Run: feed bash hook with payload; check stdout JSON decision field.
+
+### SPEC-026: patch-settings.py registers PreToolUse hook
+Run: python scripts/patch-settings.py --settings /tmp/test.json --platform unix
+Expected: hooks.PreToolUse contains pre-build-gate entry with Write|Edit matcher.
+
+### SPEC-027: boss-delta.py outputs run-plan.md
+Run: python scripts/boss-delta.py --requirements .boss/requirements.md --output /tmp/run-plan.md
+Expected: /tmp/run-plan.md created, contains FULL RUN or NO CHANGES or PARTIAL RUN.
+
+### SPEC-028: All CI templates include ubuntu-latest + macos-latest matrix
+Files: .github/workflows/test.yml, ci-templates/python.yml, node.yml, go.yml, rust.yml, playwright.yml
+Expected: each has strategy.matrix.os containing both ubuntu-latest and macos-latest.
+
+### SPEC-029: demo and signoff skills exist
+skills/demo/SKILL.md and skills/signoff/SKILL.md both exist with relevant content.
+
+### SPEC-030: All tests pass
+Run: python -m pytest tests/ -q
+Expected: 48+ pass, remaining skipped (bash-only on Windows).
