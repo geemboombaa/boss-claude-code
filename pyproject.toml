@@ -1,0 +1,15 @@
+[project]
+name = "boss"
+version = "1.0.0"
+description = "Claude Code Enforcement Stack"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "jsonschema>=4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --tb=short"

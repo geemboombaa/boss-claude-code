@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BOSS Certification",
+  "type": "object",
+  "required": ["certified", "certifier", "timestamp", "requirements_total", "requirements_passed", "requirements_failed", "requirements_met", "gaps", "proof_artifacts"],
+  "properties": {
+    "certified": { "type": "boolean" },
+    "certifier": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "spec_file": { "type": "string" },
+    "verification_file": { "type": "string" },
+    "requirements_total": { "type": "integer", "minimum": 0 },
+    "requirements_passed": { "type": "integer", "minimum": 0 },
+    "requirements_failed": { "type": "integer", "minimum": 0 },
+    "requirements_met": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["requirement", "reason"],
+        "properties": {
+          "requirement": { "type": "string" },
+          "reason": { "type": "string" },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "proof_artifacts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "certification_notes": { "type": "string" }
+  },
+  "if": { "properties": { "certified": { "const": true } } },
+  "then": {
+    "properties": {
+      "gaps": { "maxItems": 0 },
+      "requirements_failed": { "const": 0 }
+    }
+  }
+}

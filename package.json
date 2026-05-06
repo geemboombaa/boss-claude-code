@@ -1,0 +1,21 @@
+{
+  "name": "@boss-claude/install",
+  "version": "1.0.0",
+  "description": "BOSS -- Claude Code Enforcement Stack. Write the requirement. Walk away. Come back to a green CI badge.",
+  "keywords": ["claude-code", "hooks", "testing", "enforcement", "ai-coding", "tdd"],
+  "homepage": "https://github.com/boss-claude/boss",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/boss-claude/boss.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "boss": "./bin/boss.js"
+  },
+  "scripts": {
+    "postinstall": "node bin/boss.js install"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
