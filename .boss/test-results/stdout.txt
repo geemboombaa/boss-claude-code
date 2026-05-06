@@ -10,4 +10,4 @@ tests\test_patch_settings.py ..........                                  [ 51%]
 tests\test_stop_gate_logic.py ssssssssss.....                            [100%]
 
 - generated xml file: C:\Users\v_per\Claude\Projects\SDLC\boss\.boss\test-results\junit.xml -
-======================= 21 passed, 10 skipped in 1.40s ========================
+======================= 21 passed, 10 skipped in 1.33s ========================

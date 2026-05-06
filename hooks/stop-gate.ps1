@@ -122,7 +122,8 @@ try {
         }
         if (-not $python) {
             foreach ($cmd in @("python3", "python")) {
-                $sysPath = (Get-Command $cmd -ErrorAction SilentlyContinue)?.Source
+                $cmdObj = Get-Command $cmd -ErrorAction SilentlyContinue
+                $sysPath = if ($cmdObj) { $cmdObj.Source } else { $null }
                 $python = Get-ValidPython $sysPath
                 if ($python) { break }
             }
