@@ -35,18 +35,15 @@ GitHub Actions runs on every push. Claude has zero control. Green badge = indepe
 
 **Linux/Mac:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/boss-claude/boss/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/geemboombaa/boss-claude-code/master/install.sh | bash
 ```
 
 **Windows:**
 ```powershell
-iwr https://raw.githubusercontent.com/boss-claude/boss/main/install.ps1 | iex
+iwr https://raw.githubusercontent.com/geemboombaa/boss-claude-code/master/install.ps1 | iex
 ```
 
-**npm/npx:**
-```bash
-npx @boss-claude/install
-```
+**npm/npx:** _(coming soon — package not yet published)_
 
 ---
 

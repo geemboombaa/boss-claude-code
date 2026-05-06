@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # BOSS install.sh — one-command install for Linux/Mac
-# Usage: curl -fsSL https://raw.githubusercontent.com/boss-claude/boss/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/geemboombaa/boss-claude-code/master/install.sh | bash
 # Or:    bash install.sh [--quiet] [--template=python] [--skip-ci]
 set -euo pipefail
 
 BOSS_VERSION="1.0.0"
-BOSS_REPO="https://raw.githubusercontent.com/boss-claude/boss/main"
+BOSS_REPO="https://raw.githubusercontent.com/geemboombaa/boss-claude-code/master"
 BOSS_DIR="$HOME/.claude/boss"
 QUIET=false
 TEMPLATE_ARG=""

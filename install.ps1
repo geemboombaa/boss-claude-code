@@ -1,5 +1,5 @@
 # BOSS install.ps1 -- Windows installer
-# Usage: iwr https://raw.githubusercontent.com/boss-claude/boss/main/install.ps1 | iex
+# Usage: iwr https://raw.githubusercontent.com/geemboombaa/boss-claude-code/master/install.ps1 | iex
 # Or:    .\install.ps1 [-Quiet] [-Template python] [-SkipCI] [-DryRun]
 param(
     [switch]$Quiet,
@@ -10,7 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $BossVersion = "1.0.0"
-$BossRepo = "https://raw.githubusercontent.com/boss-claude/boss/main"
+$BossRepo = "https://raw.githubusercontent.com/geemboombaa/boss-claude-code/master"
 $BossDir = Join-Path $HOME ".claude\boss"
 
 function Write-Log([string]$msg) { if (-not $Quiet) { Write-Host $msg } }
