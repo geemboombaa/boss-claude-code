@@ -56,8 +56,9 @@ tests/test_patch_settings.py, tests/test_certification_schema.py, tests/test_sto
 Run: `python -m pytest tests/ -q`
 Expected: all tests pass (or skip with documented reason)
 
-### SPEC-011: stop-gate.sh exists and is executable
-File exists at hooks/stop-gate.sh. Is marked executable (chmod +x).
+### SPEC-011: stop-gate.sh exists and has executable bit in git index (mode 100755)
+Run: `git ls-files --stage hooks/stop-gate.sh`
+Expected: mode 100755 (not 100644)
 
 ### SPEC-012: stop-gate.ps1 exists and has valid PowerShell syntax
 File exists at hooks/stop-gate.ps1. PowerShell syntax check passes.

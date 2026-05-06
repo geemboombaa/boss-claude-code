@@ -12,10 +12,7 @@
     "requirements_total": { "type": "integer", "minimum": 0 },
     "requirements_passed": { "type": "integer", "minimum": 0 },
     "requirements_failed": { "type": "integer", "minimum": 0 },
-    "requirements_met": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
+    "requirements_met": { "type": "array", "items": { "type": "string" } },
     "gaps": {
       "type": "array",
       "items": {
@@ -28,10 +25,7 @@
         }
       }
     },
-    "proof_artifacts": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
+    "proof_artifacts": { "type": "array", "items": { "type": "string" } },
     "certification_notes": { "type": "string" }
   },
   "if": { "properties": { "certified": { "const": true } } },

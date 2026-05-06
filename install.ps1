@@ -117,6 +117,13 @@ if (-not $Template -and -not $Quiet) {
 }
 if (-not $Template) { $Template = $projectType }
 
+# FIX ISSUE-005: validate template against allowlist (prevent path traversal)
+$validTemplates = @("python-backend", "node-api", "fullstack", "go-service", "rust-crate", "generic")
+if ($validTemplates -notcontains $Template) {
+    Write-Err "Unknown template: '$Template'. Valid: $($validTemplates -join ', ')"
+    exit 1
+}
+
 # Copy CLAUDE.md template
 $claudeMd = Join-Path $cwd "CLAUDE.md"
 if (Test-Path $claudeMd) {
@@ -142,7 +149,8 @@ if (-not $SkipCI) {
             "fullstack"      { "node" }
             "go-service"     { "go" }
             "rust-crate"     { "rust" }
-            default          { "node" }
+            "generic"        { "python" }
+            default          { "python" }
         }
         Copy-OrDownload "ci-templates/$ciFile.yml" (Join-Path $workflowDir "test.yml")
         Write-Log "  Created .github\workflows\test.yml"

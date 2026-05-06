@@ -149,6 +149,17 @@ if [ -z "$TEMPLATE_ARG" ] && [ "$QUIET" = false ]; then
 fi
 [ -z "$TEMPLATE_ARG" ] && TEMPLATE_ARG="$PROJECT_TYPE"
 
+# FIX ISSUE-005: validate template against allowlist (prevent path traversal)
+VALID_TEMPLATES="python-backend node-api fullstack go-service rust-crate generic"
+template_valid=false
+for t in $VALID_TEMPLATES; do
+    [ "$TEMPLATE_ARG" = "$t" ] && template_valid=true && break
+done
+if [ "$template_valid" = "false" ]; then
+    err "Unknown template: '$TEMPLATE_ARG'. Valid options: $VALID_TEMPLATES"
+    exit 1
+fi
+
 # Copy CLAUDE.md template
 if [ -f "$CWD/CLAUDE.md" ]; then
     if confirm "CLAUDE.md already exists. Overwrite?"; then
@@ -167,13 +178,14 @@ if [ "$SKIP_CI" = false ]; then
     if confirm "Set up GitHub Actions CI?"; then
         mkdir -p "$CWD/.github/workflows"
         # Map template to CI file
-        CI_FILE="generic"
+        CI_FILE="python"  # sensible default — has uv + pytest + artifacts
         case "$TEMPLATE_ARG" in
             python-backend) CI_FILE="python" ;;
-            node-api) CI_FILE="node" ;;
-            fullstack) CI_FILE="node" ;;
-            go-service) CI_FILE="go" ;;
-            rust-crate) CI_FILE="rust" ;;
+            node-api)       CI_FILE="node" ;;
+            fullstack)      CI_FILE="node" ;;
+            go-service)     CI_FILE="go" ;;
+            rust-crate)     CI_FILE="rust" ;;
+            generic)        CI_FILE="python" ;;
         esac
         copy_or_download "ci-templates/$CI_FILE.yml" "$CWD/.github/workflows/test.yml"
         log "  Created .github/workflows/test.yml"

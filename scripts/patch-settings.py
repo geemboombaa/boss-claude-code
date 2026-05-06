@@ -77,10 +77,12 @@ def main():
 
     for event in ("Stop", "SubagentStop"):
         existing_list = existing_hooks.get(event, [])
+        # FIX: check command field only — avoids false match on paths like /home/bossanova/
         already_registered = any(
-            "stop-gate" in str(h).lower() or "boss" in str(h).lower()
+            "stop-gate" in h.get("command", "").lower()
             for entry in existing_list
             for h in entry.get("hooks", [])
+            if isinstance(h, dict)
         )
         if not already_registered:
             existing_list.append(boss_hook_entry)
