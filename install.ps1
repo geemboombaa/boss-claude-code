@@ -92,11 +92,46 @@ Write-Log "  Copied stop-gate.ps1 to $BossDir\hooks\"
 Copy-OrDownload "hooks/pre-build-gate.ps1" (Join-Path $BossDir "hooks\pre-build-gate.ps1")
 Write-Log "  Copied pre-build-gate.ps1 to $BossDir\hooks\"
 
+Copy-OrDownload "hooks/test-guard.ps1" (Join-Path $BossDir "hooks\test-guard.ps1")
+Write-Log "  Copied test-guard.ps1 to $BossDir\hooks\"
+
 Copy-OrDownload "scripts/patch-settings.py" (Join-Path $BossDir "scripts\patch-settings.py")
 
 Write-Log ""
 Write-Log "Patching settings.json..."
-& python (Join-Path $BossDir "scripts\patch-settings.py") --platform win
+
+# REQ-087/088: detect WSL vs native Windows; use explicit PS path to avoid WSL routing
+$runningInWSL = $false
+try {
+    if ($env:WSL_DISTRO_NAME -or $env:WSLENV) { $runningInWSL = $true }
+    elseif ((Get-Process -Id $PID -ErrorAction SilentlyContinue).MainModule.FileName -match 'wsl') { $runningInWSL = $true }
+} catch {}
+
+if ($runningInWSL) {
+    Write-Log "  Detected WSL -- using bash hooks"
+    $stopGateCmd = "bash $BossDir/hooks/stop-gate.sh"
+    $preGateCmd  = "bash $BossDir/hooks/pre-build-gate.sh"
+    $testGuardCmd = "bash $BossDir/hooks/test-guard.sh"
+} else {
+    # Prefer PS7 (pwsh) for explicit path; fallback to PS5.1 system path
+    $psExe = $null
+    $pwshObj = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($pwshObj) {
+        $psExe = $pwshObj.Source
+    } else {
+        $ps5 = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+        $psExe = if (Test-Path $ps5) { $ps5 } else { "powershell" }
+    }
+    $stopGateCmd  = "& `"$psExe`" -ExecutionPolicy Bypass -File `"$(Join-Path $BossDir 'hooks\stop-gate.ps1')`""
+    $preGateCmd   = "& `"$psExe`" -ExecutionPolicy Bypass -File `"$(Join-Path $BossDir 'hooks\pre-build-gate.ps1')`""
+    $testGuardCmd = "& `"$psExe`" -ExecutionPolicy Bypass -File `"$(Join-Path $BossDir 'hooks\test-guard.ps1')`""
+    Write-Log "  Using PowerShell: $psExe"
+}
+
+& python (Join-Path $BossDir "scripts\patch-settings.py") --platform win `
+    "--hook-command-ps1=$stopGateCmd" `
+    "--pre-build-gate-ps1=$preGateCmd" `
+    "--test-guard-ps1=$testGuardCmd"
 Write-Log ""
 
 # Template selection

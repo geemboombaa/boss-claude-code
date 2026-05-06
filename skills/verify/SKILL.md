@@ -10,6 +10,7 @@ You are Agent 2 in the BOSS 3-agent verification pipeline.
 2. `.boss/testplan.md` — what tests were supposed to be written
 3. Git diff: run `git diff HEAD~10..HEAD` to see what changed
 4. The project's test command (detect from: pyproject.toml → pytest, package.json → npm test, go.mod → go test, Cargo.toml → cargo test)
+5. `.boss/test-results/stdout.txt` — **mandatory**: read this file to see what tests actually ran. If it is absent or empty, that is a FAIL for every requirement that involves tests.
 
 ## Your Job
 

@@ -38,7 +38,10 @@ If Agent 2 marked something PASS but the raw artifact does not confirm it: **cer
 ### Step 4: Check for missing requirements
 For every requirement in the spec: is it in the verification report? If not: FAIL.
 
-### Step 5: Write certification
+### Step 5: Extract coverage (optional)
+If `stdout.txt` contains a pytest coverage report (lines like `TOTAL ... 87%`), extract the total coverage percentage and include it as `coverage_pct` in the certification JSON.
+
+### Step 6: Write certification
 
 Write `.boss/certification.json` matching the schema at `.boss/schemas/certification.schema.json`:
 
@@ -58,7 +61,8 @@ Write `.boss/certification.json` matching the schema at `.boss/schemas/certifica
     ".boss/test-results/stdout.txt",
     ".boss/test-results/junit.xml"
   ],
-  "certification_notes": ""
+  "certification_notes": "",
+  "coverage_pct": 87
 }
 ```
 

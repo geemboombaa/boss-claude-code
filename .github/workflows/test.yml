@@ -29,6 +29,7 @@ jobs:
         run: |
           bash -n hooks/stop-gate.sh
           bash -n hooks/pre-build-gate.sh
+          bash -n hooks/test-guard.sh
           bash -n hooks/commit-msg.sh
           bash -n hooks/pre-push.sh
           bash -n install.sh
@@ -36,12 +37,11 @@ jobs:
 
       - name: Verify hook executable bits
         run: |
-          mode=$(git ls-files --stage hooks/stop-gate.sh | awk '{print $1}')
-          [ "$mode" = "100755" ] || (echo "FAIL: stop-gate.sh not executable ($mode)" && exit 1)
-          echo "PASS: stop-gate.sh is 100755"
-          mode2=$(git ls-files --stage hooks/pre-build-gate.sh | awk '{print $1}')
-          [ "$mode2" = "100755" ] || (echo "FAIL: pre-build-gate.sh not executable ($mode2)" && exit 1)
-          echo "PASS: pre-build-gate.sh is 100755"
+          for hook in hooks/stop-gate.sh hooks/pre-build-gate.sh hooks/test-guard.sh; do
+            mode=$(git ls-files --stage "$hook" | awk '{print $1}')
+            [ "$mode" = "100755" ] || (echo "FAIL: $hook not executable ($mode)" && exit 1)
+            echo "PASS: $hook is 100755"
+          done
 
       - name: Validate JSON files
         run: |

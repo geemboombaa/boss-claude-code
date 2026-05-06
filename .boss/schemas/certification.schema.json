@@ -26,7 +26,8 @@
       }
     },
     "proof_artifacts": { "type": "array", "items": { "type": "string" } },
-    "certification_notes": { "type": "string" }
+    "certification_notes": { "type": "string" },
+    "coverage_pct": { "type": "number", "minimum": 0, "maximum": 100 }
   },
   "if": { "properties": { "certified": { "const": true } } },
   "then": {

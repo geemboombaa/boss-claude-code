@@ -125,6 +125,10 @@ copy_or_download "hooks/pre-build-gate.sh" "$BOSS_DIR/hooks/pre-build-gate.sh"
 chmod +x "$BOSS_DIR/hooks/pre-build-gate.sh"
 log "  Copied pre-build-gate.sh to $BOSS_DIR/hooks/"
 
+copy_or_download "hooks/test-guard.sh" "$BOSS_DIR/hooks/test-guard.sh"
+chmod +x "$BOSS_DIR/hooks/test-guard.sh"
+log "  Copied test-guard.sh to $BOSS_DIR/hooks/"
+
 copy_or_download "scripts/patch-settings.py" "$BOSS_DIR/scripts/patch-settings.py"
 
 log ""

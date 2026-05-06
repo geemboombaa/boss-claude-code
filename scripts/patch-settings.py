@@ -46,6 +46,8 @@ def main():
     parser.add_argument("--hook-command-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/stop-gate.ps1"')
     parser.add_argument("--pre-build-gate-sh",  default="bash ~/.claude/boss/hooks/pre-build-gate.sh")
     parser.add_argument("--pre-build-gate-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/pre-build-gate.ps1"')
+    parser.add_argument("--test-guard-sh",  default="bash ~/.claude/boss/hooks/test-guard.sh")
+    parser.add_argument("--test-guard-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/test-guard.ps1"')
     parser.add_argument("--platform", default=None, choices=["win", "unix"])
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -53,6 +55,7 @@ def main():
     is_windows = (args.platform == "win") or (args.platform is None and platform.system() == "Windows")
     hook_command = args.hook_command_ps1 if is_windows else args.hook_command_sh
     pre_build_gate_command = args.pre_build_gate_ps1 if is_windows else args.pre_build_gate_sh
+    test_guard_command = args.test_guard_ps1 if is_windows else args.test_guard_sh
 
     settings_path = (
         pathlib.Path(args.settings) if args.settings
@@ -77,6 +80,10 @@ def main():
     pre_build_gate_entry = {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [{"type": "command", "command": pre_build_gate_command}]
+    }
+    test_guard_entry = {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [{"type": "command", "command": test_guard_command}]
     }
 
     existing_hooks = settings.get("hooks", {})
@@ -113,6 +120,20 @@ def main():
         print("  + Adding BOSS pre-build-gate hook to PreToolUse")
     else:
         print("  = BOSS pre-build-gate hook already registered for PreToolUse, skipping")
+
+    guard_registered = any(
+        "test-guard" in h.get("command", "").lower()
+        for entry in pre_tool_list
+        for h in entry.get("hooks", [])
+        if isinstance(h, dict)
+    )
+    if not guard_registered:
+        pre_tool_list.append(test_guard_entry)
+        existing_hooks["PreToolUse"] = pre_tool_list
+        changed = True
+        print("  + Adding BOSS test-guard hook to PreToolUse")
+    else:
+        print("  = BOSS test-guard hook already registered for PreToolUse, skipping")
 
     if not changed:
         print("No changes needed -- all BOSS hooks already registered.")

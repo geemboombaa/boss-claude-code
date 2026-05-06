@@ -1,5 +1,7 @@
 # BOSS — Claude Code Enforcement Stack
 
+[![BOSS CI](https://github.com/geemboombaa/boss-claude-code/actions/workflows/test.yml/badge.svg)](https://github.com/geemboombaa/boss-claude-code/actions/workflows/test.yml)
+
 > Write the requirement. Walk away. Come back to a green CI badge.
 
 ---

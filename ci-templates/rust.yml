@@ -31,3 +31,18 @@ jobs:
         with:
           name: test-results-${{ github.sha }}
           path: .boss/test-results/
+
+  comment-pr:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request' && always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Comment BOSS certification on PR
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BOSS_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          [ -f .boss/certification.json ] || exit 0
+          python3 -c "import json,subprocess,os,sys; cert=json.load(open('.boss/certification.json')); ok=cert.get('certified',False); p=str(cert.get('requirements_passed','?')); t=str(cert.get('requirements_total','?')); mark='certified' if ok else 'NOT certified'; msg='**BOSS '+mark+'** ('+p+'/'+t+' requirements)'; cov=cert.get('coverage_pct'); msg=(msg+' | coverage: '+str(int(cov))+'%') if cov is not None else msg; pr=os.environ.get('BOSS_PR_NUMBER',''); subprocess.run(['gh','pr','comment',pr,'--body',msg],capture_output=True) if pr else None" 2>/dev/null || true

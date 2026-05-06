@@ -149,6 +149,44 @@ _Source: BOSS.md + user requirements + live research_
 | REQ-074 | /signoff skill records CEO approval to .boss/demo-signoff.md with timestamp | Yes — invoke /signoff, read file |
 | REQ-075 | pre-build-gate hook registered as PreToolUse event in settings.json | Yes — grep settings.json |
 
+### Layer 12: Stop Hook Reliability
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-076 | BOSS_RETRY=N env var: retry test suite N times before blocking (default 0) | Yes — set BOSS_RETRY=1, observe retry |
+| REQ-077 | BOSS_SKIP_PATTERNS env var: comma-separated globs; skip gate when ALL changed files match | Yes — set pattern, verify skip |
+| REQ-078 | BOSS_WEBHOOK_URL env var: POST JSON payload to URL on every block event | Yes — set URL, trigger block, check POST |
+
+### Layer 13: Test Mutation Protection
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-079 | At session start, write .boss/baseline-tests.txt listing all test files in tests/ | Yes — file exists after hook fires |
+| REQ-080 | PreToolUse hook blocks edits to files in baseline-tests.txt (test-guard hook) | Yes — attempt edit existing test, observe block |
+| REQ-081 | test-guard hook registered as PreToolUse event in settings.json | Yes — grep settings.json |
+
+### Layer 14: Verification Model Improvements
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-082 | Agent 2 receives .boss/test-results/stdout.txt as mandatory input | Yes — verify/SKILL.md references file |
+| REQ-083 | certification.schema.json has optional coverage_pct field (number 0-100) | Yes — schema validation |
+| REQ-084 | Certifier writes coverage_pct to certification.json when available | Yes — read certification.json |
+
+### Layer 15: GitHub Integrations
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-085 | All 5 CI templates include PR comment step posting certification.json summary | Yes — read YAML |
+| REQ-086 | README.md includes CI status badge linking to GitHub Actions | Yes — read README |
+
+### Layer 16: Windows / WSL Hardening
+
+| ID | Requirement | Testable? |
+|---|---|---|
+| REQ-087 | install.ps1 detects if running under WSL vs native Windows; writes correct hook command | Yes — inspect generated settings.json |
+| REQ-088 | install.ps1 uses explicit powershell.exe path (not just powershell) to avoid WSL routing | Yes — read generated hook command |
+
 ---
 
 ## Non-Functional Requirements
