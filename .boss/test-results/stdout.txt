@@ -1,4 +1,4 @@
-============================= test session starts =============================
+﻿============================= test session starts =============================
 platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0
 rootdir: C:\Users\v_per\Claude\Projects\SDLC\boss
 configfile: pyproject.toml
@@ -10,5 +10,4 @@ tests\test_new_features.py ..................sssss......                 [ 55%]
 tests\test_patch_settings.py .............                               [ 76%]
 tests\test_stop_gate_logic.py ssssssssss.....                            [100%]
 
-- generated xml file: C:\Users\v_per\Claude\Projects\SDLC\boss\.boss\test-results\junit.xml -
-======================= 48 passed, 15 skipped in 2.11s ========================
+======================= 48 passed, 15 skipped in 2.57s ========================
