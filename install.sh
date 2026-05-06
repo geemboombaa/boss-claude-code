@@ -200,16 +200,83 @@ if [ "$SKIP_CI" = false ]; then
     fi
 fi
 
-# Copy BOSS verification skills
-mkdir -p "$BOSS_DIR/skills/verify" "$BOSS_DIR/skills/certify" "$BOSS_DIR/skills/build" "$BOSS_DIR/skills/demo" "$BOSS_DIR/skills/signoff"
-copy_or_download "skills/build/SKILL.md"   "$BOSS_DIR/skills/build/SKILL.md"
-copy_or_download "skills/verify/SKILL.md"  "$BOSS_DIR/skills/verify/SKILL.md"
-copy_or_download "skills/certify/SKILL.md" "$BOSS_DIR/skills/certify/SKILL.md"
-copy_or_download "skills/demo/SKILL.md"    "$BOSS_DIR/skills/demo/SKILL.md"
-copy_or_download "skills/signoff/SKILL.md" "$BOSS_DIR/skills/signoff/SKILL.md"
-copy_or_download "scripts/boss-delta.py"   "$BOSS_DIR/scripts/boss-delta.py"
-log "  Installed /build, /verify, /certify, /demo, /signoff skills"
-log "  Installed boss-delta.py (smart delta)"
+# Install skills to ~/.claude/skills/ (Claude Code auto-discovers this path)
+SKILLS_DIR="$HOME/.claude/skills"
+for skill in build verify certify demo signoff; do
+    mkdir -p "$SKILLS_DIR/$skill"
+    copy_or_download "skills/$skill/SKILL.md" "$SKILLS_DIR/$skill/SKILL.md"
+done
+log "  Installed /build, /verify, /certify, /demo, /signoff → $SKILLS_DIR/"
+
+# Install boss-delta.py to BOSS_DIR/scripts
+mkdir -p "$BOSS_DIR/scripts"
+copy_or_download "scripts/boss-delta.py" "$BOSS_DIR/scripts/boss-delta.py"
+log "  Installed boss-delta.py → $BOSS_DIR/scripts/"
+
+# Auto-install test runner dependencies
+log ""
+log "Checking test runner dependencies..."
+case "$PROJECT_TYPE" in
+    python-backend|generic)
+        PYTHON_BIN=""
+        for venv in .venv venv env; do
+            if [ -f "$CWD/$venv/bin/python" ]; then
+                PYTHON_BIN="$CWD/$venv/bin/python"
+                break
+            fi
+        done
+        [ -z "$PYTHON_BIN" ] && PYTHON_BIN="$(command -v python3 2>/dev/null || command -v python 2>/dev/null || echo "")"
+        if [ -n "$PYTHON_BIN" ]; then
+            if ! "$PYTHON_BIN" -m pytest --version >/dev/null 2>&1; then
+                log "  pytest not found — installing..."
+                if command -v uv >/dev/null 2>&1 && [ -f "$CWD/pyproject.toml" ]; then
+                    uv add --dev pytest --quiet && log "  Installed pytest via uv" || err "Could not install pytest via uv"
+                else
+                    "$PYTHON_BIN" -m pip install pytest --quiet && log "  Installed pytest via pip" || err "Could not install pytest"
+                fi
+            else
+                log "  pytest: OK"
+            fi
+        else
+            err "  python3 not found — install Python and then install pytest manually"
+        fi
+        ;;
+    node-api|fullstack)
+        if ! command -v node >/dev/null 2>&1; then
+            err "  node not found — install Node.js from https://nodejs.org"
+        else
+            log "  node: OK ($(node --version))"
+            if [ -f "$CWD/package.json" ]; then
+                HAS_TEST=$(python3 -c "import json; d=json.load(open('$CWD/package.json')); print('yes' if d.get('scripts',{}).get('test') else 'no')" 2>/dev/null || echo "unknown")
+                if [ "$HAS_TEST" = "no" ]; then
+                    log "  WARNING: no 'test' script in package.json — stop hook will skip"
+                fi
+            fi
+        fi
+        ;;
+    go-service)
+        command -v go >/dev/null 2>&1 && log "  go: OK ($(go version | awk '{print $3}'))" || err "  go not found — install from https://go.dev"
+        ;;
+    rust-crate)
+        command -v cargo >/dev/null 2>&1 && log "  cargo: OK" || err "  cargo not found — install from https://rustup.rs"
+        ;;
+esac
+
+# Timing check: warn if test suite is slow (stop hook has 60s hard limit in some environments)
+if [ "$TESTS_EXIST" = "true" ] && [ -n "${PYTHON_BIN:-}" ] && "$PYTHON_BIN" -m pytest --version >/dev/null 2>&1; then
+    log ""
+    log "Measuring test suite speed..."
+    START_TS=$(date +%s 2>/dev/null || echo 0)
+    "$PYTHON_BIN" -m pytest "$CWD" -q --co -q >/dev/null 2>&1 || true
+    END_TS=$(date +%s 2>/dev/null || echo 0)
+    COLLECT_SECS=$((END_TS - START_TS))
+    if [ "$COLLECT_SECS" -gt 5 ] 2>/dev/null; then
+        log "  WARNING: test collection took ${COLLECT_SECS}s — full suite may exceed 60s stop-hook limit"
+        log "  Consider setting BOSS_TEST_CMD='pytest tests/unit -x' for a faster subset"
+    else
+        log "  Test collection: fast (${COLLECT_SECS}s)"
+    fi
+fi
 
 log ""
 log "============================================="

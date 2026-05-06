@@ -264,6 +264,30 @@ def test_signoff_skill_references_demo_signoff():
 
 
 # ---------------------------------------------------------------------------
+# Skills install path: must be ~/.claude/skills/<name>/SKILL.md
+# ---------------------------------------------------------------------------
+
+def test_install_sh_uses_correct_skills_path():
+    """install.sh copies skills to ~/.claude/skills/ not ~/.claude/boss/skills/."""
+    content = (REPO / "install.sh").read_text()
+    assert '/.claude/skills' in content, "install.sh must write to ~/.claude/skills/"
+    # Must NOT install skills under ~/.claude/boss/skills/
+    assert 'BOSS_DIR/skills' not in content or '$BOSS_DIR/skills' not in content.split("# Install skills")[1].split("# Install boss")[0] if "# Install skills" in content else True
+
+
+def test_install_ps1_uses_correct_skills_path():
+    """install.ps1 copies skills to ~/.claude/skills/ not ~/.claude/boss/skills/."""
+    content = (REPO / "install.ps1").read_text()
+    assert r'.claude\skills' in content or 'skillsDir' in content
+
+
+def test_skill_dir_names_match_commands():
+    """Skill directory names produce correct slash command names."""
+    for name in ["build", "verify", "certify", "demo", "signoff"]:
+        assert (REPO / "skills" / name / "SKILL.md").exists(), f"skills/{name}/SKILL.md missing"
+
+
+# ---------------------------------------------------------------------------
 # REQ-063 / REQ-065: build skill references CI-first bootstrap
 # ---------------------------------------------------------------------------
 

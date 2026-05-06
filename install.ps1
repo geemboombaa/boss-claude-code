@@ -164,18 +164,82 @@ if (-not $SkipCI) {
     }
 }
 
-# Install skills and scripts
-foreach ($d in @("skills\build", "skills\verify", "skills\certify", "skills\demo", "skills\signoff", "scripts")) {
-    New-Item -ItemType Directory -Path (Join-Path $BossDir $d) -Force | Out-Null
+# Install skills to ~/.claude/skills/ (Claude Code auto-discovers this path)
+$skillsDir = Join-Path $HOME ".claude\skills"
+foreach ($skill in @("build", "verify", "certify", "demo", "signoff")) {
+    $skillDst = Join-Path $skillsDir $skill
+    New-Item -ItemType Directory -Path $skillDst -Force | Out-Null
+    Copy-OrDownload "skills/$skill/SKILL.md" (Join-Path $skillDst "SKILL.md")
 }
-Copy-OrDownload "skills/build/SKILL.md"   (Join-Path $BossDir "skills\build\SKILL.md")
-Copy-OrDownload "skills/verify/SKILL.md"  (Join-Path $BossDir "skills\verify\SKILL.md")
-Copy-OrDownload "skills/certify/SKILL.md" (Join-Path $BossDir "skills\certify\SKILL.md")
-Copy-OrDownload "skills/demo/SKILL.md"    (Join-Path $BossDir "skills\demo\SKILL.md")
-Copy-OrDownload "skills/signoff/SKILL.md" (Join-Path $BossDir "skills\signoff\SKILL.md")
-Copy-OrDownload "scripts/boss-delta.py"   (Join-Path $BossDir "scripts\boss-delta.py")
-Write-Log "  Installed /build, /verify, /certify, /demo, /signoff skills"
-Write-Log "  Installed boss-delta.py (smart delta)"
+Write-Log "  Installed /build, /verify, /certify, /demo, /signoff -> $skillsDir\"
+
+# Install boss-delta.py to BossDir/scripts
+New-Item -ItemType Directory -Path (Join-Path $BossDir "scripts") -Force | Out-Null
+Copy-OrDownload "scripts/boss-delta.py" (Join-Path $BossDir "scripts\boss-delta.py")
+Write-Log "  Installed boss-delta.py -> $BossDir\scripts\"
+
+# Auto-install test runner dependencies
+Write-Log ""
+Write-Log "Checking test runner dependencies..."
+$pythonOk = $false
+if ($projectType -in @("python-backend", "generic")) {
+    $pythonBin = $null
+    foreach ($venv in @(".venv", "venv", "env")) {
+        $candidate = Join-Path $cwd "$venv\Scripts\python.exe"
+        if (Test-Path $candidate) { $pythonBin = $candidate; break }
+    }
+    if (-not $pythonBin) {
+        $cmdObj = Get-Command python3 -ErrorAction SilentlyContinue
+        if ($cmdObj) { $pythonBin = $cmdObj.Source }
+    }
+    if (-not $pythonBin) {
+        $cmdObj = Get-Command python -ErrorAction SilentlyContinue
+        if ($cmdObj) { $pythonBin = $cmdObj.Source }
+    }
+    if ($pythonBin) {
+        $pytestCheck = & $pythonBin -m pytest --version 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log "  pytest not found -- installing..."
+            $uvCmd = Get-Command uv -ErrorAction SilentlyContinue
+            if ($uvCmd -and (Test-Path (Join-Path $cwd "pyproject.toml"))) {
+                & uv add --dev pytest --quiet
+                if ($LASTEXITCODE -eq 0) { Write-Log "  Installed pytest via uv" }
+                else { Write-Err "Could not install pytest via uv -- run: pip install pytest" }
+            } else {
+                & $pythonBin -m pip install pytest --quiet
+                if ($LASTEXITCODE -eq 0) { Write-Log "  Installed pytest via pip" }
+                else { Write-Err "Could not install pytest -- run: pip install pytest" }
+            }
+        } else {
+            Write-Log "  pytest: OK"
+        }
+        $pythonOk = $true
+    } else {
+        Write-Err "python not found -- install Python then run: pip install pytest"
+    }
+} elseif ($projectType -in @("node-api", "fullstack")) {
+    $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
+    if ($nodeCmd) {
+        Write-Log "  node: OK ($( & node --version ))"
+        $pkgJson = Join-Path $cwd "package.json"
+        if (Test-Path $pkgJson) {
+            $pkg = Get-Content $pkgJson | ConvertFrom-Json
+            if (-not $pkg.scripts -or -not $pkg.scripts.test) {
+                Write-Log "  WARNING: no 'test' script in package.json -- stop hook will skip"
+            }
+        }
+    } else {
+        Write-Err "node not found -- install from https://nodejs.org"
+    }
+} elseif ($projectType -eq "go-service") {
+    $goCmd = Get-Command go -ErrorAction SilentlyContinue
+    if ($goCmd) { Write-Log "  go: OK ($( & go version ))" }
+    else { Write-Err "go not found -- install from https://go.dev" }
+} elseif ($projectType -eq "rust-crate") {
+    $cargoCmd = Get-Command cargo -ErrorAction SilentlyContinue
+    if ($cargoCmd) { Write-Log "  cargo: OK" }
+    else { Write-Err "cargo not found -- install from https://rustup.rs" }
+}
 
 Write-Log ""
 Write-Log "============================================="
