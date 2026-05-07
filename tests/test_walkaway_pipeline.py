@@ -532,3 +532,68 @@ def test_W26_ci_tests_install_ps1():
         pytest.skip(".github/workflows not yet created")
     content = " ".join(p.read_text() for p in workflows.glob("*.yml"))
     assert "install.ps1" in content, "No CI workflow tests install.ps1"
+
+
+# ---------------------------------------------------------------------------
+# REQ-W17 (extended): /run skill must have concrete tool instructions
+# ---------------------------------------------------------------------------
+
+def test_W17_run_skill_has_concrete_tool_instructions():
+    """REQ-W17: /run SKILL.md must reference specific Claude Code tools, not just documentation."""
+    skill = SKILLS_GLOBAL / "run" / "SKILL.md"
+    if not skill.exists():
+        pytest.skip("/run skill not yet created")
+    content = skill.read_text()
+    concrete_tools = ["Glob", "Grep", "Write", "Read", "Agent", "Bash"]
+    found = [t for t in concrete_tools if t in content]
+    assert len(found) >= 4, \
+        f"/run skill must reference at least 4 specific tools for autonomous execution. Found {len(found)}: {found}"
+
+
+# ---------------------------------------------------------------------------
+# REQ-W18 (extended): headless launcher exists so CEO runs one command
+# ---------------------------------------------------------------------------
+
+def test_W18_headless_launcher_exists():
+    """REQ-W18: boss-run.ps1 or boss-run.sh must exist as CEO's single command."""
+    ps1 = REPO / "boss-run.ps1"
+    sh = REPO / "boss-run.sh"
+    assert ps1.exists() or sh.exists(), \
+        f"No headless launcher found. Need boss-run.ps1 or boss-run.sh"
+
+
+def test_W18_headless_launcher_calls_claude():
+    """REQ-W18: launcher must invoke claude CLI non-interactively."""
+    ps1 = REPO / "boss-run.ps1"
+    sh = REPO / "boss-run.sh"
+    launcher = ps1 if ps1.exists() else (sh if sh.exists() else None)
+    if not launcher:
+        pytest.skip("headless launcher not yet created")
+    content = launcher.read_text()
+    assert "claude" in content.lower(), "launcher must invoke claude CLI"
+
+
+def test_W18_headless_launcher_passes_run_skill():
+    """REQ-W18: launcher must invoke /run skill."""
+    ps1 = REPO / "boss-run.ps1"
+    sh = REPO / "boss-run.sh"
+    launcher = ps1 if ps1.exists() else (sh if sh.exists() else None)
+    if not launcher:
+        pytest.skip("headless launcher not yet created")
+    content = launcher.read_text()
+    assert "/run" in content, "launcher must pass /run to claude"
+
+
+# ---------------------------------------------------------------------------
+# REQ-W13 (extended): CI templates actually call notify.py
+# ---------------------------------------------------------------------------
+
+def test_W13_all_ci_templates_call_notify():
+    """REQ-W13: all 5 CI templates must call notify.py so CEO gets notified."""
+    required = ["python.yml", "node.yml", "go.yml", "rust.yml", "playwright.yml"]
+    for name in required:
+        path = CI_TEMPLATES / name
+        assert path.exists(), f"CI template missing: {name}"
+        content = path.read_text()
+        assert "notify" in content.lower(), \
+            f"{name}: does not call notify.py — CEO will never be notified of CI result"
