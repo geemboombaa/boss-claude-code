@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BOSS spec.md schema",
+  "description": "Defines required sections in .boss/spec.md",
+  "type": "object",
+  "required": ["title", "acceptance_criteria"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Feature or requirement title — first H1 in spec.md"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Testable acceptance criteria — each item maps to a test case"
+    },
+    "test_plan": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Test cases linked to acceptance_criteria"
+    },
+    "out_of_scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicitly excluded functionality"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

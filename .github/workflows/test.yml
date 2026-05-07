@@ -47,7 +47,15 @@ jobs:
         run: |
           python -c "import json; json.load(open('package.json'))"
           python -c "import json; json.load(open('.boss/schemas/certification.schema.json'))"
+          python -c "import json; json.load(open('.boss/schemas/spec.schema.json'))"
           echo "All JSON files valid"
+
+      - name: Verify install scripts exist and are valid
+        run: |
+          test -f install.sh && echo "PASS: install.sh exists" || (echo "FAIL: install.sh missing" && exit 1)
+          bash -n install.sh && echo "PASS: install.sh syntax OK"
+          test -f install.ps1 && echo "PASS: install.ps1 exists" || (echo "FAIL: install.ps1 missing" && exit 1)
+          echo "Install scripts verified"
 
       - name: Verify certification exists and is certified
         run: |
