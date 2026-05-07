@@ -588,6 +588,45 @@ def test_W18_headless_launcher_passes_run_skill():
 # REQ-W13 (extended): CI templates actually call notify.py
 # ---------------------------------------------------------------------------
 
+def test_run_skill_agents_use_separate_process():
+    """Agent 2/3 must be separate claude -p processes, NOT Agent tool subagents.
+    Subagents share session context. A separate claude -p process has zero context
+    from the builder — it can only read files on disk. True independence.
+    """
+    skill = SKILLS_GLOBAL / "run" / "SKILL.md"
+    if not skill.exists():
+        pytest.skip("/run skill not yet created")
+    content = skill.read_text()
+    assert "claude -p" in content or "claude --print" in content, \
+        "/run must use 'claude -p' to spawn truly zero-context agents. " \
+        "Agent tool subagents share session context — not acceptable for verification."
+
+
+def test_run_skill_parses_requirement_before_research():
+    """Research must be targeted, not blind. Requirement parsed first to extract
+    keywords and entities, THEN research uses those for targeted Glob/Grep calls.
+    """
+    skill = SKILLS_GLOBAL / "run" / "SKILL.md"
+    if not skill.exists():
+        pytest.skip("/run skill not yet created")
+    content = skill.read_text()
+    lines = content.split("\n")
+    parse_words = ["parse", "extract", "keyword", "decompose", "identify", "understand"]
+    parse_idx = next(
+        (i for i, l in enumerate(lines) if any(w in l.lower() for w in parse_words)),
+        None
+    )
+    research_idx = next(
+        (i for i, l in enumerate(lines) if "research" in l.lower() and "##" in l),
+        None
+    )
+    assert parse_idx is not None, \
+        "/run must have explicit requirement parsing step before research"
+    assert research_idx is not None, "/run must have research phase"
+    assert parse_idx < research_idx, \
+        f"Requirement parsing (line {parse_idx}) must come before research phase (line {research_idx})"
+
+
 def test_W13_all_ci_templates_call_notify():
     """REQ-W13: all 5 CI templates must call notify.py so CEO gets notified."""
     required = ["python.yml", "node.yml", "go.yml", "rust.yml", "playwright.yml"]
