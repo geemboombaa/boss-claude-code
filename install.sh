@@ -129,6 +129,12 @@ copy_or_download "hooks/test-guard.sh" "$BOSS_DIR/hooks/test-guard.sh"
 chmod +x "$BOSS_DIR/hooks/test-guard.sh"
 log "  Copied test-guard.sh to $BOSS_DIR/hooks/"
 
+copy_or_download "hooks/auto-push.ps1" "$BOSS_DIR/hooks/auto-push.ps1"
+copy_or_download "hooks/auto-pr.ps1" "$BOSS_DIR/hooks/auto-pr.ps1"
+copy_or_download "hooks/pre-push.ps1" "$BOSS_DIR/hooks/pre-push.ps1"
+[ -f "$BOSS_DIR/hooks/auto-push.ps1" ] && log "  Copied auto-push.ps1 to $BOSS_DIR/hooks/"
+[ -f "$BOSS_DIR/hooks/auto-pr.ps1" ]   && log "  Copied auto-pr.ps1 to $BOSS_DIR/hooks/"
+
 copy_or_download "scripts/patch-settings.py" "$BOSS_DIR/scripts/patch-settings.py"
 
 log ""
@@ -206,11 +212,11 @@ fi
 
 # Install skills to ~/.claude/skills/ (Claude Code auto-discovers this path)
 SKILLS_DIR="$HOME/.claude/skills"
-for skill in build verify certify demo signoff; do
+for skill in build verify certify demo signoff run; do
     mkdir -p "$SKILLS_DIR/$skill"
     copy_or_download "skills/$skill/SKILL.md" "$SKILLS_DIR/$skill/SKILL.md"
 done
-log "  Installed /build, /verify, /certify, /demo, /signoff → $SKILLS_DIR/"
+log "  Installed /build, /verify, /certify, /demo, /signoff, /run → $SKILLS_DIR/"
 
 # Install boss-delta.py to BOSS_DIR/scripts
 mkdir -p "$BOSS_DIR/scripts"

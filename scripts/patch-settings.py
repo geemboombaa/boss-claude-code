@@ -48,6 +48,8 @@ def main():
     parser.add_argument("--pre-build-gate-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/pre-build-gate.ps1"')
     parser.add_argument("--test-guard-sh",  default="bash ~/.claude/boss/hooks/test-guard.sh")
     parser.add_argument("--test-guard-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/test-guard.ps1"')
+    parser.add_argument("--auto-push-sh",  default="bash ~/.claude/boss/hooks/auto-push.sh")
+    parser.add_argument("--auto-push-ps1", default='powershell -ExecutionPolicy Bypass -File "~/.claude/boss/hooks/auto-push.ps1"')
     parser.add_argument("--platform", default=None, choices=["win", "unix"])
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -56,6 +58,7 @@ def main():
     hook_command = args.hook_command_ps1 if is_windows else args.hook_command_sh
     pre_build_gate_command = args.pre_build_gate_ps1 if is_windows else args.pre_build_gate_sh
     test_guard_command = args.test_guard_ps1 if is_windows else args.test_guard_sh
+    auto_push_command = args.auto_push_ps1 if is_windows else args.auto_push_sh
 
     settings_path = (
         pathlib.Path(args.settings) if args.settings
@@ -84,6 +87,10 @@ def main():
     test_guard_entry = {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [{"type": "command", "command": test_guard_command}]
+    }
+    auto_push_entry = {
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "command": auto_push_command}]
     }
 
     existing_hooks = settings.get("hooks", {})
@@ -134,6 +141,22 @@ def main():
         print("  + Adding BOSS test-guard hook to PreToolUse")
     else:
         print("  = BOSS test-guard hook already registered for PreToolUse, skipping")
+
+    # Register PostToolUse Bash hook for auto-push
+    post_tool_list = existing_hooks.get("PostToolUse", [])
+    auto_push_registered = any(
+        "auto-push" in h.get("command", "").lower()
+        for entry in post_tool_list
+        for h in entry.get("hooks", [])
+        if isinstance(h, dict)
+    )
+    if not auto_push_registered:
+        post_tool_list.append(auto_push_entry)
+        existing_hooks["PostToolUse"] = post_tool_list
+        changed = True
+        print("  + Adding BOSS auto-push hook to PostToolUse")
+    else:
+        print("  = BOSS auto-push hook already registered for PostToolUse, skipping")
 
     if not changed:
         print("No changes needed -- all BOSS hooks already registered.")

@@ -627,6 +627,66 @@ def test_run_skill_parses_requirement_before_research():
         f"Requirement parsing (line {parse_idx}) must come before research phase (line {research_idx})"
 
 
+def test_install_ps1_copies_auto_push():
+    """install.ps1 must copy auto-push.ps1 to ~/.claude/boss/hooks/."""
+    install = REPO / "install.ps1"
+    assert install.exists()
+    content = install.read_text()
+    assert "auto-push.ps1" in content, \
+        "install.ps1 does not copy auto-push.ps1 — auto-push never works on fresh install"
+
+
+def test_install_ps1_copies_auto_pr():
+    """install.ps1 must copy auto-pr.ps1 to ~/.claude/boss/hooks/."""
+    install = REPO / "install.ps1"
+    content = install.read_text()
+    assert "auto-pr.ps1" in content, \
+        "install.ps1 does not copy auto-pr.ps1 — auto-PR never works on fresh install"
+
+
+def test_install_sh_copies_auto_push():
+    """install.sh must copy auto-push.ps1/sh."""
+    install = REPO / "install.sh"
+    assert install.exists()
+    content = install.read_text()
+    assert "auto-push" in content, \
+        "install.sh does not install auto-push — auto-push never works on fresh Linux/Mac install"
+
+
+def test_install_installs_run_skill():
+    """install.ps1 must install /run skill."""
+    install = REPO / "install.ps1"
+    content = install.read_text()
+    assert '"run"' in content or "'run'" in content or "run" in content.split("skills")[1][:200], \
+        "install.ps1 does not install /run skill"
+
+
+def test_install_sh_installs_run_skill():
+    """install.sh must install /run skill."""
+    install = REPO / "install.sh"
+    content = install.read_text()
+    skill_section = content[content.find("skill"):]
+    assert "run" in skill_section[:500], \
+        "install.sh does not install /run skill"
+
+
+def test_patch_settings_registers_posttooluse_hook():
+    """patch-settings.py must register PostToolUse Bash hook for auto-push."""
+    patcher = REPO / "scripts" / "patch-settings.py"
+    assert patcher.exists()
+    content = patcher.read_text()
+    assert "PostToolUse" in content, \
+        "patch-settings.py does not register PostToolUse hook — auto-push never registered on fresh install"
+
+
+def test_install_ps1_has_dependency_check():
+    """install.ps1 must check/install pytest like install.sh does."""
+    install = REPO / "install.ps1"
+    content = install.read_text()
+    assert "pytest" in content, \
+        "install.ps1 has no pytest dependency check — Windows users get broken stop hook"
+
+
 def test_W13_all_ci_templates_call_notify():
     """REQ-W13: all 5 CI templates must call notify.py so CEO gets notified."""
     required = ["python.yml", "node.yml", "go.yml", "rust.yml", "playwright.yml"]

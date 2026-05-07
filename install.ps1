@@ -95,6 +95,15 @@ Write-Log "  Copied pre-build-gate.ps1 to $BossDir\hooks\"
 Copy-OrDownload "hooks/test-guard.ps1" (Join-Path $BossDir "hooks\test-guard.ps1")
 Write-Log "  Copied test-guard.ps1 to $BossDir\hooks\"
 
+Copy-OrDownload "hooks/auto-push.ps1" (Join-Path $BossDir "hooks\auto-push.ps1")
+Write-Log "  Copied auto-push.ps1 to $BossDir\hooks\"
+
+Copy-OrDownload "hooks/auto-pr.ps1" (Join-Path $BossDir "hooks\auto-pr.ps1")
+Write-Log "  Copied auto-pr.ps1 to $BossDir\hooks\"
+
+Copy-OrDownload "hooks/pre-push.ps1" (Join-Path $BossDir "hooks\pre-push.ps1")
+Write-Log "  Copied pre-push.ps1 to $BossDir\hooks\"
+
 Copy-OrDownload "scripts/patch-settings.py" (Join-Path $BossDir "scripts\patch-settings.py")
 
 Write-Log ""
@@ -201,12 +210,12 @@ if (-not $SkipCI) {
 
 # Install skills to ~/.claude/skills/ (Claude Code auto-discovers this path)
 $skillsDir = Join-Path $HOME ".claude\skills"
-foreach ($skill in @("build", "verify", "certify", "demo", "signoff")) {
+foreach ($skill in @("build", "verify", "certify", "demo", "signoff", "run")) {
     $skillDst = Join-Path $skillsDir $skill
     New-Item -ItemType Directory -Path $skillDst -Force | Out-Null
     Copy-OrDownload "skills/$skill/SKILL.md" (Join-Path $skillDst "SKILL.md")
 }
-Write-Log "  Installed /build, /verify, /certify, /demo, /signoff -> $skillsDir\"
+Write-Log "  Installed /build, /verify, /certify, /demo, /signoff, /run -> $skillsDir\"
 
 # Install boss-delta.py to BossDir/scripts
 New-Item -ItemType Directory -Path (Join-Path $BossDir "scripts") -Force | Out-Null
